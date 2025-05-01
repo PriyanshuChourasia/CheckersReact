@@ -43,9 +43,11 @@ const BoxesContainer = () =>{
                         boxObj.color="bg-orange-700";
                         if(i<3){
                             boxObj.piece= 'bg-green-700';
+                            boxObj.active=true;
                         }
                         else if(i>4){
                             boxObj.piece = 'bg-black';
+                            boxObj.active=true;
                         }
                     }
                     playBoxes.push(boxObj);
@@ -56,8 +58,46 @@ const BoxesContainer = () =>{
         createPlayGround();
     },[]);
 
+
     const onHandleClick = (item) =>{
-        console.log("item",item);
+        if(item.active !== true){
+            return;
+        }
+
+        
+
+        const updateColorBox = checkersBoxes.map((item) => item.color.includes('bg-fuchsia-500') ? {...item,color:"bg-orange-700",active:false} : item);
+
+        let righti = item.i;
+        let rightj = item.j;
+        let lefti = item.i;
+        let leftj = item.j;
+        
+        // if go upwards
+        righti = righti - 1;
+        rightj = rightj + 1;
+
+        lefti = lefti - 1;
+        leftj = leftj - 1;
+        console.log("i",righti);
+        console.log(checkersBoxes,"boxes");
+        const rightUpward = updateColorBox.filter(x => righti >= 0 && rightj < 8 ? Number(x.i) == righti && Number(x.j) == rightj : null);
+        const leftUpward = updateColorBox.filter(x => lefti >=0 && leftj >=0 ? Number(x.i) == lefti && Number(x.j) == leftj : null);
+        if(rightUpward.length > 0 && leftUpward.length >0 && rightUpward[0].piece == null && leftUpward[0].piece == null){
+            console.log(righti,rightj,"i,j");
+            console.log(lefti,leftj,"i,j");
+            const newCheckersBox = updateColorBox.map((item)=> Number(item.i) ==  righti && Number(item.j) == rightj ? {...item,color:"bg-fuchsia-500",active:false}:item);
+            const leftUpwardBoxes = newCheckersBox.map((item) => Number(item.i) == lefti && Number(item.j) == leftj ? {...item,color:"bg-fuchsia-500",active:false}:item);
+            setCheckersBoxes(leftUpwardBoxes);
+        }
+        else if(rightUpward.length > 0 && rightUpward[0].piece == null){
+            const newCheckersBox = updateColorBox.map((item)=> Number(item.i) ==  righti && Number(item.j) == rightj ? {...item,color:"bg-fuchsia-500",active:false}:item);
+            setCheckersBoxes(newCheckersBox);
+        }
+        else if(leftUpward.length > 0 && leftUpward[0].piece == null){
+            const leftUpwardBoxes = updateColorBox.map((item)=> Number(item.i) == lefti && Number(item.j) == leftj ? {...item,color:"bg-fuchsia-500",active:false}: item);
+            setCheckersBoxes(leftUpwardBoxes);
+        }
     }
 
 
@@ -67,8 +107,8 @@ const BoxesContainer = () =>{
         <div className="flex flex-wrap w-[644px] border-2 border-black rounded">
             {
                 checkersBoxes.map((item,index)=>(
-                    <Box key={index} i={item.i} j={item.j} boxColor={item.color}>
-                        <BoardPiece onClick={()=>onHandleClick(item)} i={item.i} j={item.j} color={item.piece}  />
+                    <Box onClick={()=>onHandleClick(item)} key={index} i={item.i} j={item.j} boxColor={item.color}>
+                        <BoardPiece  i={item.i} j={item.j} color={item.piece}  />
                     </Box>
                 ))
             }
