@@ -1,11 +1,14 @@
 import PlayGround from "./components/PlayGround";
+import PlayerProvider from "./context/PlayerProvider";
 
 
 
 const App = () =>{
   return(
     <>
-      <PlayGround/>
+      <PlayerProvider>
+        <PlayGround/>
+      </PlayerProvider>
     </>
   )
 }
