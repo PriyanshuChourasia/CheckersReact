@@ -8,7 +8,9 @@ const defaultValue = {
     blackPlayerActive: true,
     setBlackPlayerActive:() => {},
     whitePlayerActive: false,
-    setWhitePlayerActive: () => {}
+    setWhitePlayerActive: () => {},
+    enemyFound:false,
+    setEnemyFound: () => {}
 }
 
 export const PlayerContext = createContext(defaultValue);
