@@ -12,7 +12,8 @@ const BoxesContainer = () =>{
     const [checkersBoxes,setCheckersBoxes] = useState([]);
     const {setBlackPlayerActive,setWhitePlayerActive} = useContext(PlayerContext);
 
-    let updateAttackZoneCheckBox =[];
+
+    let enemyPieceboxes = [];
 
     /**
      * const checkerBox = {
@@ -22,6 +23,14 @@ const BoxesContainer = () =>{
      * }
      */
 
+    /***
+     * ld = left downward
+     * rd = right downward
+     * lu = left upward
+     * ru = right upward
+     * 
+     * position: attacker position it means the position of attacker
+     */
 
     /***
      *  const boxObj ={
@@ -33,8 +42,23 @@ const BoxesContainer = () =>{
                         playerId:null,
                         stepActive:null,
                         playerActive:null,
-                        playerMoveActive:null
+                        playerMoveActive:null,
+                        position:null,
+                        direction: null
         };
+
+                   i:position,
+                        j:position,
+                        color:box colors on board,
+                        piece:if there is a piece on that box then only if will have a value,
+                        active: this means the box which have been clicked it have a player or not it contains piece or not,
+                        playerId: this is for identity,
+                        stepActive: if the box which have been clicked that box is a step for that player or not and if this is true then it means player want to move to that position,
+                        playerActive: if this is true means it defines whether this player wants to move or not if player is going to make a move or this piece has been clicked by the playing person ,
+                        playerMoveActive: this is for the chances,
+                        position: it is the position of the attacker
+
+
         if piece makes a move then the previous place should make color
         color: should be player active color
         piece: null
@@ -72,7 +96,9 @@ const BoxesContainer = () =>{
                         playerId:null,
                         stepActive:null,
                         playerActive:null,
-                        playerMoveActive:null
+                        playerMoveActive:null,
+                        position:null,
+                        direction:null
                     }
                     if(sum%2==0){
                         boxObj.i=i;
@@ -105,14 +131,20 @@ const BoxesContainer = () =>{
 
 
     const onHandleClick = (item) =>{
+        console.log(item,"main");
         if(item.active !== true){
             if(item.stepActive == true){
                 movePiece(checkersBoxes,item);
                 return;
+            }else if(item.stepActive == null && item.color == "bg-white"){
+                launchAttack(item);
+            }else if(item.stepActive == false){
+                console.log("wrong condition")
             }
             return;
         }
-        // playerTwoMovement(item);
+
+
         if(item.playerMoveActive == true && item.playerId == "black")
         {
             playerOneMovement(item);
@@ -130,18 +162,21 @@ const BoxesContainer = () =>{
         const playerI = item.i;
         const playerJ = item.j;
       
-        const updateColorBox = checkersBoxes.map((item) => item.color.includes('bg-fuchsia-500') || item.color.includes('bg-white') ? {...item,color:"bg-orange-700",active:false,stepActive:false,playerActive:false} : item);
-        const playerActiveFilter = updateColorBox.filter((item)=> item.playerActive == true);
-        let playerOneBoxes = updateColorBox;
+        const updateColorBox = checkersBoxes.map((item) => item.color.includes('bg-fuchsia-500') ? {...item,color:"bg-orange-700",active:null,stepActive:null,playerActive:null} : item);
+        const whiteBoxDeactive = updateColorBox.map((item) => item.color.includes('bg-white') ? {...item,color:"bg-orange-700",active:null,stepActive:null,playerActive:null} : item);
+        const playerActiveFilter = whiteBoxDeactive.filter((item)=> item.playerActive == true);
+        let playerOneBoxes = whiteBoxDeactive;
+        // setCheckersBoxes(whiteBoxDeactive);
 
         if(playerActiveFilter.length > 0){
             const pI = playerActiveFilter[0].i;
             const pJ = playerActiveFilter[0].j;
-            playerOneBoxes = updateColorBox.map((item) => Number(item.i) == pI && Number(item.j) == pJ ? {...item,playerActive:null}:item);
+            playerOneBoxes = whiteBoxDeactive.map((item) => Number(item.i) == pI && Number(item.j) == pJ ? {...item,playerActive:null}:item);
         }
 
 
         const newUpdatePlayerActive = playerOneBoxes.map((item)=> Number(item.i) == playerI && Number(item.j) == playerJ ? {...item,playerActive:true}: item);
+
 
 
         let righti = item.i;
@@ -158,37 +193,42 @@ const BoxesContainer = () =>{
  
         const rightUpward = newUpdatePlayerActive.filter(x => righti >= 0 && rightj < 8 ? Number(x.i) == righti && Number(x.j) == rightj : null);
         const leftUpward = newUpdatePlayerActive.filter(x => lefti >=0 && leftj >=0 ? Number(x.i) == lefti && Number(x.j) == leftj : null);
-
         if(rightUpward.length > 0 && leftUpward.length >0 && rightUpward[0].piece == null && leftUpward[0].piece == null){
-            const newCheckersBox = newUpdatePlayerActive.map((item)=> Number(item.i) ==  righti && Number(item.j) == rightj ? {...item,color:"bg-fuchsia-500",active:false,stepActive:true}:item);
-            const leftUpwardBoxes = newCheckersBox.map((item) => Number(item.i) == lefti && Number(item.j) == leftj ? {...item,color:"bg-fuchsia-500",active:false,stepActive:true}:item);
+            const newCheckersBox = newUpdatePlayerActive.map((item)=> Number(item.i) ==  righti && Number(item.j) == rightj ? {...item,color:"bg-fuchsia-500",active:null,stepActive:true}:item);
+            const leftUpwardBoxes = newCheckersBox.map((item) => Number(item.i) == lefti && Number(item.j) == leftj ? {...item,color:"bg-fuchsia-500",active:null,stepActive:true}:item);
             setCheckersBoxes(leftUpwardBoxes);
         }
         else if(rightUpward.length > 0 && rightUpward[0].piece == null){
-            if(leftUpward[0]?.piece != null){
-                const newCheckersBox = newUpdatePlayerActive.map((item)=> Number(item.i) ==  righti && Number(item.j) == rightj ? {...item,color:"bg-fuchsia-500",active:false,stepActive:true}:item);
+            if(leftUpward[0]?.piece != null && leftUpward[0]?.playerId != "black"){
+                const newCheckersBox = newUpdatePlayerActive.map((item)=> Number(item.i) ==  righti && Number(item.j) == rightj ? {...item,color:"bg-fuchsia-500",active:null,stepActive:true}:item);
                 setCheckersBoxes(newCheckersBox);
                 if(newCheckersBox){
                     checkForEnemy(item,newCheckersBox);
                 }
             }else{
-                const newCheckersBox = newUpdatePlayerActive.map((item)=> Number(item.i) ==  righti && Number(item.j) == rightj ? {...item,color:"bg-fuchsia-500",active:false,stepActive:true}:item);
+                const newCheckersBox = newUpdatePlayerActive.map((item)=> Number(item.i) ==  righti && Number(item.j) == rightj ? {...item,color:"bg-fuchsia-500",active:null,stepActive:true}:item);
                 setCheckersBoxes(newCheckersBox);
             }
 
         }
         else if(leftUpward.length > 0 && leftUpward[0].piece == null){
-            if(rightUpward?.piece != null){
-                const leftUpwardBoxes = newUpdatePlayerActive.map((item)=> Number(item.i) == lefti && Number(item.j) == leftj ? {...item,color:"bg-fuchsia-500",active:false,stepActive:true}: item);
+            if(rightUpward[0]?.piece != null && rightUpward[0]?.playerId != "black"){
+                const leftUpwardBoxes = newUpdatePlayerActive.map((item)=> Number(item.i) == lefti && Number(item.j) == leftj ? {...item,color:"bg-fuchsia-500",active:null,stepActive:true}: item);
                 setCheckersBoxes(leftUpwardBoxes);
                 if(leftUpwardBoxes){
                     checkForEnemy(item,leftUpwardBoxes);
                 }
             }else{
-                const leftUpwardBoxes = newUpdatePlayerActive.map((item)=> Number(item.i) == lefti && Number(item.j) == leftj ? {...item,color:"bg-fuchsia-500",active:false,stepActive:true}: item);
+                const leftUpwardBoxes = newUpdatePlayerActive.map((item)=> Number(item.i) == lefti && Number(item.j) == leftj ? {...item,color:"bg-fuchsia-500",active:null,stepActive:true}: item);
                 setCheckersBoxes(leftUpwardBoxes);
             }
-        }else if(rightUpward.length > 0 && leftUpward.length > 0 && rightUpward[0].piece != null && leftUpward[0].piece != null){
+        }
+        else if(leftUpward.length > 0 && leftUpward[0].piece != null){
+            setCheckersBoxes(newUpdatePlayerActive);
+            checkForEnemy(item,newUpdatePlayerActive);
+        }
+        else if(rightUpward.length > 0  && rightUpward[0].piece != null){
+            console.log("entry mode enemy both side");
             setCheckersBoxes(newUpdatePlayerActive);
             checkForEnemy(item,newUpdatePlayerActive);
         }
@@ -199,20 +239,21 @@ const BoxesContainer = () =>{
 
         const playerI = item.i;
         const playerJ = item.j;
-        const updateColorBox = checkersBoxes.map((item) => item.color.includes('bg-fuchsia-500') || item.color.includes('bg-white') ? {...item,color:"bg-orange-700",active:null,stepActive:null,playerActive:null} : item);
-        const playerActiveFilter = updateColorBox.filter((item)=> item.playerActive == true);
+        const updateColorBox = checkersBoxes.map((item) => item.color.includes('bg-fuchsia-500') ? {...item,color:"bg-orange-700",active:null,stepActive:null,playerActive:null} : item);
+        const deactiveWhiteBoxes = updateColorBox.map((item) => item.color.includes('bg-white') ? {...item,color:"bg-orange-700",active:null,stepActive:null,playerActive:null} : item);
+        const playerActiveFilter = deactiveWhiteBoxes.filter((item)=> item.playerActive == true);
 
-        let deactivePlayers = updateColorBox;
+        let deactivePlayers = deactiveWhiteBoxes;
         if(playerActiveFilter.length > 0){
             const pI = playerActiveFilter[0].i;
             const pJ = playerActiveFilter[0].j;
-            deactivePlayers = updateColorBox.map((item) => Number(item.i) == pI && Number(item.j) == pJ ? {...item,playerActive:null}:item);
+            deactivePlayers = deactiveWhiteBoxes.map((item) => Number(item.i) == pI && Number(item.j) == pJ ? {...item,playerActive:null}:item);
         }
 
         const newUpdatePlayerActive = deactivePlayers.map((item)=> Number(item.i) == playerI && Number(item.j) == playerJ ? {...item,playerActive:true}: item);
 
 
-   
+        console.log("movement",item);
 
         let rightI = item.i;
         let rightJ = item.j;
@@ -230,21 +271,45 @@ const BoxesContainer = () =>{
 
         const rightDownward = newUpdatePlayerActive.filter((item)=> rightI < 8 && rightJ < 8 ? Number(item.i) == rightI && Number(item.j) == rightJ : null );
         const leftDownward = newUpdatePlayerActive.filter((item) => leftI < 8 && leftJ >= 0 ? Number(item.i) == leftI && Number(item.j) == leftJ : null);
-   
+
+
         if(rightDownward.length > 0 && leftDownward.length > 0 && rightDownward[0].piece == null && leftDownward[0].piece == null){
-            const newCheckersBox = newUpdatePlayerActive.map((item)=> Number(item.i) ==  rightI && Number(item.j) == rightJ ? {...item,color:"bg-fuchsia-500",active:false,stepActive:true}:item);
-            const leftBoxes = newCheckersBox.map((item) => Number(item.i) == leftI && Number(item.j) == leftJ ? {...item,color:"bg-fuchsia-500",active:false,stepActive:true}:item);
+            const newCheckersBox = newUpdatePlayerActive.map((item)=> Number(item.i) ==  rightI && Number(item.j) == rightJ ? {...item,color:"bg-fuchsia-500",active:null,stepActive:true}:item);
+            const leftBoxes = newCheckersBox.map((item) => Number(item.i) == leftI && Number(item.j) == leftJ ? {...item,color:"bg-fuchsia-500",active:null,stepActive:true}:item);
             setCheckersBoxes(leftBoxes);
         }
         else if(rightDownward.length > 0 && rightDownward[0].piece == null){
-            const newCheckersBox = newUpdatePlayerActive.map((item)=> Number(item.i) ==  rightI && Number(item.j) == rightJ ? {...item,color:"bg-fuchsia-500",active:false,stepActive:true}:item);
-            setCheckersBoxes(newCheckersBox);
+            if(leftDownward[0]?.piece != null && leftDownward[0]?.playerId != "green"){
+                const newCheckersBox = newUpdatePlayerActive.map((item)=> Number(item.i) ==  rightI && Number(item.j) == rightJ ? {...item,color:"bg-fuchsia-500",active:null,stepActive:true}:item);
+                setCheckersBoxes(newCheckersBox);
+                if(newCheckersBox){
+                    checkForEnemy(item,newCheckersBox);
+                }
+            }else{
+                const newCheckersBox = newUpdatePlayerActive.map((item)=> Number(item.i) ==  rightI && Number(item.j) == rightJ ? {...item,color:"bg-fuchsia-500",active:null,stepActive:true}:item);
+                setCheckersBoxes(newCheckersBox);
+            }
+
         }
         else if(leftDownward.length > 0 && leftDownward[0].piece == null){
-            const leftDownwardBoxes = newUpdatePlayerActive.map((item)=> Number(item.i) == leftI && Number(item.j) == leftJ ? {...item,color:"bg-fuchsia-500",active:false,stepActive:true}: item);
-            setCheckersBoxes(leftDownwardBoxes);
+            if(rightDownward[0]?.piece != null && rightDownward[0]?.playerId != "green"){
+                const leftDownwardBoxes = newUpdatePlayerActive.map((item)=> Number(item.i) == leftI && Number(item.j) == leftJ ? {...item,color:"bg-fuchsia-500",active:null,stepActive:true}: item);
+                setCheckersBoxes(leftDownwardBoxes);
+                if(leftDownwardBoxes){
+                    checkForEnemy(item,leftDownwardBoxes);
+                }
+            }else{
+                const leftDownwardBoxes = newUpdatePlayerActive.map((item)=> Number(item.i) == leftI && Number(item.j) == leftJ ? {...item,color:"bg-fuchsia-500",active:null,stepActive:true}: item);
+                setCheckersBoxes(leftDownwardBoxes);
+            }
+        }else if(leftDownward.length > 0 && leftDownward[0].piece != null){
+            setCheckersBoxes(newUpdatePlayerActive);
+            checkForEnemy(item,newUpdatePlayerActive);
         }
-   
+        else if(rightDownward.length > 0 && rightDownward[0].piece != null){
+            setCheckersBoxes(newUpdatePlayerActive);
+            checkForEnemy(item,newUpdatePlayerActive);
+        }
     }
 
     function playerNoDeactive(players){
@@ -253,15 +318,15 @@ const BoxesContainer = () =>{
         const whiteActive = players.filter((item) => item.playerMoveActive == true && item.playerId == "green");
 
         if(blackActive.length > 0){
-            const deactiveBlackMovePlayer = players.map((item)=> item.playerMoveActive == true && item.playerId == "black" ? {...item,playerMoveActive:null}:item);
-            const activeWhiteMovePlayer = deactiveBlackMovePlayer.map((item)=> item.playerMoveActive == null && item.playerId == "green" ? {...item,playerMoveActive:true}:item);
+            const deactiveBlackMovePlayer = players.map((item)=> item.playerMoveActive == true && item.playerId == "black" ? {...item,playerMoveActive:null,active:true}:item);
+            const activeWhiteMovePlayer = deactiveBlackMovePlayer.map((item)=> item.playerMoveActive == null && item.playerId == "green" ? {...item,playerMoveActive:true,active:true}:item);
             setCheckersBoxes(activeWhiteMovePlayer);
             setWhitePlayerActive(true);
             setBlackPlayerActive(false);
         }
         else if(whiteActive.length > 0){
-            const deactiveWhiteMovePlayer = players.map((item)=> item.playerMoveActive == true && item.playerId == "green" ? {...item,playerMoveActive:null}:item);
-            const activeBlackMovePlayer = deactiveWhiteMovePlayer.map((item)=> item.playerMoveActive == null && item.playerId == "black" ? {...item,playerMoveActive:true}:item);
+            const deactiveWhiteMovePlayer = players.map((item)=> item.playerMoveActive == true && item.playerId == "green" ? {...item,playerMoveActive:null,active:true}:item);
+            const activeBlackMovePlayer = deactiveWhiteMovePlayer.map((item)=> item.playerMoveActive == null && item.playerId == "black" ? {...item,playerMoveActive:true,active:true}:item);
             setCheckersBoxes(activeBlackMovePlayer);
             setWhitePlayerActive(false);
             setBlackPlayerActive(true);
@@ -295,110 +360,352 @@ const BoxesContainer = () =>{
 
 
     function resetBoard(boxes){
-        const updateColorBox = boxes.map((item) => item.color.includes('bg-fuchsia-500') || item.color.includes('bg-white') ? {...item,color:"bg-orange-700",stepActive:null,playerActive:null} : item);
-        setCheckersBoxes(updateColorBox);
-        playerNoDeactive(updateColorBox);
+        const updateColorBox = boxes.map((item) => item.color.includes('bg-fuchsia-500') ? {...item,color:"bg-orange-700",stepActive:null,playerActive:null} : item);
+        const newupdateColorBox = updateColorBox.map((item) => item.color.includes('bg-white') ? {...item,color:"bg-orange-700",active:null,stepActive:null,playerActive:null} : item);
+        setCheckersBoxes(newupdateColorBox);
+        playerNoDeactive(newupdateColorBox);
     }
 
 
-    function checkForEnemy(item){
+    function checkForEnemy(item,boxes){
 
-
+        console.log(item,"check enemy");
         if(item.playerId == "black"){
-            checkForRightUpward(item.i,item.j);
-            console.log(updateAttackZoneCheckBox,"updated");
-            // checkForLeftUpward(item.i,item.j);
+            checkForRightUpward(item,item.i,item.j,boxes);
+            return;
+        }else if(item.playerId == "green"){
+            checkForRightDownward(item,item.i,item.j,boxes);
+            return;
         }
-        // }else if(item.playerId == "green"){
-        //     checkForRightDownward(item.i,item.j,boxes);
-        //     checkForLeftDownward(item.i,item.j,boxes);
-        //     return;
-        // }
 
     }
 
-    function checkForRightUpward(i,j){
+    function checkForRightUpward(item,i,j,boxes){
         let rightI = i;
         let rightJ = j;
         rightI = rightI - 1;
         rightJ = rightJ + 1;
 
-        const enemyPlayer = checkersBoxes.filter((item) => rightI >=0 && rightJ < 8 && Number(item.i) == rightI && Number(item.j) == rightJ && item.piece != null);
-        if(enemyPlayer.length > 0){
-            checkForRightUpward(rightI,rightJ,checkersBoxes);
+        const enemyPlayer = boxes.filter((item) => rightI >=0 && rightJ < 8 && Number(item.i) == rightI && Number(item.j) == rightJ && item.piece != null);
+
+        if(enemyPlayer.length > 0 && enemyPlayer[0].playerId != "black"){
+            checkForRightUpward(item,rightI,rightJ,boxes);
+            return;
         }else if(enemyPlayer.length == 0){
             if(rightI < 0 && rightJ > 7){
-                return;
-            }else{
-                const newCheckerbox = checkersBoxes.map((item) => Number(item.i) == i && Number(item.j) == j ? {...item,color:"bg-white"}: item );
-                updateAttackZoneCheckBox = newCheckerbox;
+                checkForLeftUpward(item,item.i,item.j,boxes);
                 return;
             }
+            else if(i == item.i && j == item.j)
+            {
+                console.log("go for left check");
+                checkForLeftUpward(item,item.i,item.j,boxes);
+                return;
+            }
+            else{
+                const attackForLeft = attackActiveEnemy(item,rightI,rightJ,boxes,"ru");
+                checkForLeftUpward(item,item.i,item.j,attackForLeft);
+                return;
+            }
+        }else{
+            return;
         }
     }
 
-    function checkForLeftUpward(i,j){
-        console.log("left check");
+    function checkForLeftUpward(item,i,j,boxes){
         let leftI = i;
         let leftJ = j;
 
         leftI = leftI - 1;
         leftJ = leftJ - 1;
-
-
         
-        const enemyLeftPlayer = updateAttackZoneCheckBox.filter((item) => leftI >=0 && leftJ >=0 && Number(item.i) == leftI && Number(item.j) == leftJ && item.piece != null);
-        if(enemyLeftPlayer.length > 0){
-            checkForLeftUpward(leftI,leftJ,updateAttackZoneCheckBox);
+        const enemyLeftPlayer = boxes.filter((item) => leftI >=0 && leftJ >=0 && Number(item.i) == leftI && Number(item.j) == leftJ && item.piece != null);
+
+        console.log(enemyLeftPlayer);
+
+        if(enemyLeftPlayer.length > 0 && enemyLeftPlayer[0].playerId != "black"){
+            checkForLeftUpward(item,leftI,leftJ,boxes);
+            return;
         }
         else if(enemyLeftPlayer.length == 0){
-  
+
             if(leftI < 0 && leftJ < 0){
                 return;
             }
-            else if(leftI >= 0 && leftJ >= 0){
-                const newCheckerbox = updateAttackZoneCheckBox.map((item) => Number(item.i) == i && Number(item.j) == j ? {...item,color:"bg-white"}: item );
-                updateAttackZoneCheckBox = newCheckerbox;
-                // attackActiveEnemy(leftI,leftJ,checkersBoxes);
-                return;
-            }else{
+            else if(i == item.i && j == item.j){
                 return;
             }
+            else if(leftI >= 0 && leftJ >= 0){
+                attackActiveEnemy(item,leftI,leftJ,boxes,"lu");
+                return;
+            }
+        }else{
+            return;
         }
        
     }
 
-    function checkForRightDownward(i,j,boxes){
+    function checkForRightDownward(item,i,j,boxes){
         let rightI = i;
         let rightJ = j;
 
         rightI = rightI + 1;
         rightJ = rightJ + 1;
 
-        const enemyDownRight = boxes.filter((item) => rightI < 8 && rightJ < 8 && Number(item.i) == rightI && Number(item.j) == rightJ && item.piece != null);
+        const enemyDownRight = boxes.filter((item) => rightI <= 7 && rightJ <= 7 && Number(item.i) == rightI && Number(item.j) == rightJ && item.piece != null);
+        if(enemyDownRight.length > 0){
+            checkForRightDownward(item,rightI,rightJ,boxes);
+            return;
+        }else if(enemyDownRight.length == 0){
+            if(rightI > 7 && rightJ > 7){
+                checkForLeftDownward(item,item.i,item.j,boxes);
+                return ;
+            }
+            else if(i == item.i && j == item.j){
+                checkForLeftDownward(item,item.i,item.j,boxes);
+                return;
+            }else{
+                const attackDownward = attackActiveEnemy(item,rightI,rightJ,boxes,"rd");
+                checkForLeftDownward(item,item.i,item.j,attackDownward);
+                return;
+            }
+        }
+
     }
 
-    function checkForLeftDownward(i,j,boxes){
+    function checkForLeftDownward(item,i,j,boxes){
+        let leftI = i;
+        let leftJ = j;
+
+        leftI = leftI + 1;
+        leftJ = leftJ - 1;
+
+        const enemyDownLeft = boxes.filter((item) => leftI <= 7 && leftJ >= 0 && Number(item.i) == leftI && Number(item.j) == leftJ && item.piece != null);
+        if(enemyDownLeft.length > 0){
+            checkForLeftDownward(item,leftI,leftJ,boxes);
+            return;
+        }else if(enemyDownLeft.length == 0){
+            if(leftI > 7 && leftJ< 0){
+                return;
+            }else if(i == item.i && j == item.j){
+                return;
+            }else if(leftI <= 7 && leftJ >= 0){
+                attackActiveEnemy(item,leftI,leftJ,boxes,"ld");
+                return;
+            }else{
+                return;
+            }
+        }
+    }
+
+
+
+    function attackActiveEnemy(position,i,j,boxes,direction){
+        const activeAttackZone = boxes.map((item) => Number(item.i) == i && Number(item.j) == j ? {...item,color:"bg-white",playerMoveActive:null,position:position,direction:direction}: item );
+        setCheckersBoxes(activeAttackZone);
+        return activeAttackZone;
+    }
+
+
+
+    function launchAttack(item){
+        // attacker details
+        let attackerposI = item.position.i;
+        let attackerposJ = item.position.j;
+        let attackerDirection = item.direction;
+
+        let newPosI = item.i;
+        let newPosJ = item.j;
+        console.log(item);
+        console.log(attackerDirection,"a");
+
+        removeEnemyPiece(item,attackerposI,attackerposJ,newPosI,newPosJ,attackerDirection);
+
+    }
+
+
+    // function moveAttackerPiece(){
+
+    // }
+
+    function removeEnemyPiece(item,aI,aJ,newI,newJ,direction){
+
+        let newPostI = newI;
+        let newPostJ = newJ;
+
+        if(direction == "rd"){
+            removeRightDownwardPiece(item,newPostI,newPostJ,aI,aJ,checkersBoxes);
+            return;
+        }
+        else if(direction == "ld"){
+            removeLeftDownwardPiece(item,newPostI,newPostJ,aI,aJ,checkersBoxes);
+            return true;
+        }else if(direction == "ru"){
+            removeRightUpwardPiece(item,newPostI,newPostJ,aI,aJ,checkersBoxes);
+            return;
+        }else if(direction == "lu"){
+            removeLeftUpwardPiece(item,newPostI,newPostJ,aI,aJ,checkersBoxes);
+            return;
+        }
+        return false;
+    }
+
+    function removeRightDownwardPiece(item,i,j,attackerI,attackerJ,boxes){
+        let rightI = i;
+        let rightJ = j;
+
+        rightI = rightI - 1;
+        rightJ  = rightJ - 1;
+
+        const enemypiece = boxes.filter((item)=> Number(item.i) == rightI && Number(item.j) == rightJ);
+      
+        if(rightI == attackerI && rightJ == attackerJ){
+            let attackerposI = item.position.i;
+            let attackerposJ = item.position.j;
+            let attackerColor = item.position.color;
+            let attackerDirection = item.direction;
+            let attacker = item.position.piece;
+            let attackerPlayerId = item.position.playerId;
+            let newPosI = item.i;
+            let newPosJ = item.j;
+
+                    const emptyAttackerPos = boxes.map((item) => Number(item.i) == attackerposI && Number(item.j) == attackerposJ ? {...item,
+                        active:null,color:"bg-orange-700",direction:null,piece:null,playerActive:null,playerMoveActive:null,position:null,stepActive:null
+                    } : item)
+                    const newCheckersPos = emptyAttackerPos.map((item) => Number(item.i) == newPosI && Number(item.j) == newPosJ ? {...item,color:attackerColor,direction:attackerDirection,
+                        piece:attacker,playerId:attackerPlayerId,playerActive:null,stepActive:null,active:true
+                    } : item);
+
+        setCheckersBoxes(newCheckersPos);
+        resetBoard(newCheckersPos);
+            return;
+        }else{
+            enemyPieceboxes.push(enemypiece[0]);
+            const newBoxes = boxes.map((item) => Number(item.i) == rightI && Number(item.j) == rightJ ? {...item,active:null,
+                color:"bg-orange-700", direction:null,piece:null,playerActive:null,playerId:null,playerMoveActive:null,stepActive:null
+            }: item);
+            console.log(newBoxes,"new boxes");
+            removeRightDownwardPiece(item,rightI,rightJ,attackerI,attackerJ,newBoxes);
+            return;
+        }
+    }
+    function removeLeftDownwardPiece(item,i,j,attackerI,attackerJ,boxes){
+        let rightI = i;
+        let rightJ = j;
+
+        rightI = rightI - 1;
+        rightJ  = rightJ + 1;
+
+        const enemypiece = boxes.filter((item)=> Number(item.i) == rightI && Number(item.j) == rightJ);
+       
+        if(rightI == attackerI && rightJ == attackerJ){
+            let attackerposI = item.position.i;
+            let attackerposJ = item.position.j;
+            let attackerColor = item.position.color;
+            let attackerDirection = item.direction;
+            let attacker = item.position.piece;
+            let attackerPlayerId = item.position.playerId;
+            let newPosI = item.i;
+            let newPosJ = item.j;
+
+                    const emptyAttackerPos = boxes.map((item) => Number(item.i) == attackerposI && Number(item.j) == attackerposJ ? {...item,
+                        active:null,color:"bg-orange-700",direction:null,piece:null,playerActive:null,playerMoveActive:null,position:null,stepActive:null
+                    } : item)
+                    const newCheckersPos = emptyAttackerPos.map((item) => Number(item.i) == newPosI && Number(item.j) == newPosJ ? {...item,color:attackerColor,direction:attackerDirection,
+                        piece:attacker,playerId:attackerPlayerId,playerActive:null,stepActive:null,active:true
+                    } : item);
+
+        setCheckersBoxes(newCheckersPos);
+        resetBoard(newCheckersPos);
+            return;
+        }else{
+            enemyPieceboxes.push(enemypiece[0]);
+            const newBoxes = boxes.map((item) => Number(item.i) == rightI && Number(item.j) == rightJ ? {...item,active:null,
+                color:"bg-orange-700", direction:null,piece:null,playerActive:null,playerId:null,playerMoveActive:null,stepActive:null
+            }: item);
+            console.log(newBoxes,"new boxes");
+            removeLeftDownwardPiece(item,rightI,rightJ,attackerI,attackerJ,newBoxes);
+            return;
+        }
+    }
+    function removeRightUpwardPiece(item,i,j,attackerI,attackerJ,boxes){
         let rightI = i;
         let rightJ = j;
 
         rightI = rightI + 1;
-        rightJ = rightJ - 1;
+        rightJ  = rightJ - 1;
 
-        const enemyDownLeft = boxes.filter((item) => rightI < 8 && rightJ < 8 && Number(item.i) == rightI && Number(item.j) == rightJ && item.piece != null);
+        const enemypiece = boxes.filter((item)=> Number(item.i) == rightI && Number(item.j) == rightJ);
+       
+        if(rightI == attackerI && rightJ == attackerJ){
+            let attackerposI = item.position.i;
+            let attackerposJ = item.position.j;
+            let attackerColor = item.position.color;
+            let attackerDirection = item.direction;
+            let attacker = item.position.piece;
+            let attackerPlayerId = item.position.playerId;
+            let newPosI = item.i;
+            let newPosJ = item.j;
+
+                    const emptyAttackerPos = boxes.map((item) => Number(item.i) == attackerposI && Number(item.j) == attackerposJ ? {...item,
+                        active:null,color:"bg-orange-700",direction:null,piece:null,playerActive:null,playerMoveActive:null,position:null,stepActive:null
+                    } : item)
+                    const newCheckersPos = emptyAttackerPos.map((item) => Number(item.i) == newPosI && Number(item.j) == newPosJ ? {...item,color:attackerColor,direction:attackerDirection,
+                        piece:attacker,playerId:attackerPlayerId,playerActive:null,stepActive:null,active:true
+                    } : item);
+
+        setCheckersBoxes(newCheckersPos);
+        resetBoard(newCheckersPos);
+            return;
+        }else{
+            enemyPieceboxes.push(enemypiece[0]);
+            const newBoxes = boxes.map((item) => Number(item.i) == rightI && Number(item.j) == rightJ ? {...item,active:null,
+                color:"bg-orange-700", direction:null,piece:null,playerActive:null,playerId:null,playerMoveActive:null,stepActive:null
+            }: item);
+            console.log(newBoxes,"new boxes");
+            removeRightUpwardPiece(item,rightI,rightJ,attackerI,attackerJ,newBoxes);
+            return;
+        }
     }
+    function removeLeftUpwardPiece(item,i,j,attackerI,attackerJ,boxes){
+        let rightI = i;
+        let rightJ = j;
 
+        rightI = rightI + 1;
+        rightJ  = rightJ + 1;
 
+        const enemypiece = boxes.filter((item)=> Number(item.i) == rightI && Number(item.j) == rightJ);
+       
+        if(rightI == attackerI && rightJ == attackerJ){
+            let attackerposI = item.position.i;
+            let attackerposJ = item.position.j;
+            let attackerColor = item.position.color;
+            let attackerDirection = item.direction;
+            let attacker = item.position.piece;
+            let attackerPlayerId = item.position.playerId;
+            let newPosI = item.i;
+            let newPosJ = item.j;
 
-    function attackActiveEnemy(i,j,checkboxes){
-        console.log("i,j",i,j);
-        const activeAttackZone = checkboxes.map((item) => Number(item.i) == i && Number(item.j) == j ? {...item,color:"bg-white"}: item );
-        console.log(activeAttackZone,"active");
-        setCheckersBoxes(activeAttackZone);
-        console.log(checkersBoxes,"checkers");
+                    const emptyAttackerPos = boxes.map((item) => Number(item.i) == attackerposI && Number(item.j) == attackerposJ ? {...item,
+                        active:null,color:"bg-orange-700",direction:null,piece:null,playerActive:null,playerMoveActive:null,position:null,stepActive:null
+                    } : item)
+                    const newCheckersPos = emptyAttackerPos.map((item) => Number(item.i) == newPosI && Number(item.j) == newPosJ ? {...item,color:attackerColor,direction:attackerDirection,
+                        piece:attacker,playerId:attackerPlayerId,playerActive:null,stepActive:null,active:true
+                    } : item);
+
+        setCheckersBoxes(newCheckersPos);
+        resetBoard(newCheckersPos);
+            return;
+        }else{
+            enemyPieceboxes.push(enemypiece[0]);
+            const newBoxes = boxes.map((item) => Number(item.i) == rightI && Number(item.j) == rightJ ? {...item,active:null,
+                color:"bg-orange-700", direction:null,piece:null,playerActive:null,playerId:null,playerMoveActive:null,stepActive:null
+            }: item);
+            console.log(newBoxes,"new boxes");
+            removeLeftUpwardPiece(item,rightI,rightJ,attackerI,attackerJ,newBoxes);
+            return;
+        }
     }
-
-
 
     return(
         <div className="flex flex-wrap w-[644px] border-2 border-black rounded">
