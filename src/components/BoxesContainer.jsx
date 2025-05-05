@@ -44,7 +44,9 @@ const BoxesContainer = () =>{
                         playerActive:null,
                         playerMoveActive:null,
                         position:null,
-                        direction: null
+                        direction: null,
+                        playerKing: null,
+                        kingBox:null
         };
 
                    i:position,
@@ -67,6 +69,8 @@ const BoxesContainer = () =>{
         stepActive: null,
         playerActive: null,
         playerMoveActive:null,
+        kingArea:null,
+        playerKing:nulll
 
         the move player to the moved box
         color: should be player active color
@@ -76,6 +80,8 @@ const BoxesContainer = () =>{
         stepActive: null,
         playerActive: prev player active,
         playerMoveActive:null,
+        kingArea: if this is true then the player will be king,
+        playerKing: if the player has become king then only it will be true
 
         after every move you have active and deactive player
      */
@@ -98,7 +104,9 @@ const BoxesContainer = () =>{
                         playerActive:null,
                         playerMoveActive:null,
                         position:null,
-                        direction:null
+                        direction:null,
+                        playerKing:null,
+                        kingArea:null
                     }
                     if(sum%2==0){
                         boxObj.i=i;
@@ -121,6 +129,13 @@ const BoxesContainer = () =>{
                             boxObj.playerMoveActive = true
                         }
                     }
+
+                    if(i == 0){
+                        boxObj.kingArea = "black";
+                    }else if(i == 7){
+                        boxObj.kingArea = "green";
+                    }
+
                     playBoxes.push(boxObj);
                 }
             }
@@ -131,9 +146,9 @@ const BoxesContainer = () =>{
 
 
     const onHandleClick = (item) =>{
-        console.log(item,"main");
         if(item.active !== true){
             if(item.stepActive == true){
+                console.log(item,"king item");
                 movePiece(checkersBoxes,item);
                 return;
             }else if(item.stepActive == null && item.color == "bg-white"){
@@ -338,7 +353,7 @@ const BoxesContainer = () =>{
         const nextI = item.i;
         const nextJ = item.j;
      
-  
+        
         const playeractive = boxes.filter((x) => x.playerActive == true);
   
         const playerActiveI = playeractive[0].i;
@@ -350,11 +365,26 @@ const BoxesContainer = () =>{
         const playerPiece = playeractive[0].piece;
         const nextActive = playeractive[0].active;
         const nextPlayerId = playeractive[0].playerId;
-        // const nextPlayerActive = playeractive[0].playerActive;
-        const nextBoxMove = prevBoxMove.map((item) => Number(item.i) == nextI && Number(item.j) == nextJ ? {...item,color:playerActiveColor,piece:playerPiece,active:nextActive,playerId:nextPlayerId,playerActive:null,stepActive:null} : item);
-        setCheckersBoxes(nextBoxMove);
+        
+        if(item.kingArea == null){
+            console.log("move new")
+            const nextBoxMove = prevBoxMove.map((item) => Number(item.i) == nextI && Number(item.j) == nextJ ? {...item,color:playerActiveColor,piece:playerPiece,active:nextActive,playerId:nextPlayerId,playerActive:null,stepActive:null} : item);
+            setCheckersBoxes(nextBoxMove);
+            resetBoard(nextBoxMove);
+        }
+        else if(item.kingArea == "black"){
+            const nextBoxMove = prevBoxMove.map((item) => Number(item.i) == nextI && Number(item.j) == nextJ ? {...item,color:playerActiveColor,piece:playerPiece,active:nextActive,playerId:nextPlayerId,playerActive:null,stepActive:null,playerKing:true} : item);
+            setCheckersBoxes(nextBoxMove);
+            resetBoard(nextBoxMove);
+        }
+        else if(item.kingArea == "green"){
+            const nextBoxMove = prevBoxMove.map((item) => Number(item.i) == nextI && Number(item.j) == nextJ ? {...item,color:playerActiveColor,piece:playerPiece,active:nextActive,playerId:nextPlayerId,playerActive:null,stepActive:null,playerKing:true} : item);
+            setCheckersBoxes(nextBoxMove);
+            resetBoard(nextBoxMove);
+        }
+
      
-        resetBoard(nextBoxMove);
+        
   
     }
 
@@ -453,7 +483,7 @@ const BoxesContainer = () =>{
         rightJ = rightJ + 1;
 
         const enemyDownRight = boxes.filter((item) => rightI <= 7 && rightJ <= 7 && Number(item.i) == rightI && Number(item.j) == rightJ && item.piece != null);
-        if(enemyDownRight.length > 0){
+        if(enemyDownRight.length > 0 && enemyDownRight[0].playerId != "green"){
             checkForRightDownward(item,rightI,rightJ,boxes);
             return;
         }else if(enemyDownRight.length == 0){
@@ -481,7 +511,7 @@ const BoxesContainer = () =>{
         leftJ = leftJ - 1;
 
         const enemyDownLeft = boxes.filter((item) => leftI <= 7 && leftJ >= 0 && Number(item.i) == leftI && Number(item.j) == leftJ && item.piece != null);
-        if(enemyDownLeft.length > 0){
+        if(enemyDownLeft.length > 0 && enemyDownLeft[0].playerId != "green"){
             checkForLeftDownward(item,leftI,leftJ,boxes);
             return;
         }else if(enemyDownLeft.length == 0){
@@ -524,9 +554,7 @@ const BoxesContainer = () =>{
     }
 
 
-    // function moveAttackerPiece(){
 
-    // }
 
     function removeEnemyPiece(item,aI,aJ,newI,newJ,direction){
 
@@ -712,7 +740,7 @@ const BoxesContainer = () =>{
             {
                 checkersBoxes.map((item,index)=>(
                     <Box onClick={()=>onHandleClick(item)} key={index} i={item.i} j={item.j} boxColor={item.color}>
-                        <BoardPiece  i={item.i} j={item.j} color={item.piece}  />
+                        <BoardPiece  i={item.i} j={item.j} color={item.piece} king={item.playerKing}  />
                     </Box>
                 ))
             }
