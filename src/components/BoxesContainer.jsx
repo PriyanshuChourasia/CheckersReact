@@ -146,6 +146,8 @@ const BoxesContainer = () =>{
 
 
     const onHandleClick = (item) =>{
+        console.log(checkersBoxes,"boxes");
+        console.log(item,"item");
         if(item.active !== true){
             if(item.stepActive == true){
                 console.log(item,"king item");
@@ -160,14 +162,14 @@ const BoxesContainer = () =>{
         }
 
 
-        if(item.playerMoveActive == true && item.playerId == "black")
+        if(item.playerMoveActive == true && item.playerId == "black" && item.playerKing == null)
         {
             playerOneMovement(item);
         }
-        else if(item.playerMoveActive == true && item.playerId == "green"){
+        else if(item.playerMoveActive == true && item.playerId == "green" && item.playerKing == null){
             playerTwoMovement(item);
-        }else{
-            console.log("else move");
+        }else if(item.playerMoveActive == true && item.playerId != null && item.playerKing != null){
+            playerKingMovement(item);
         }
    
 
@@ -327,6 +329,60 @@ const BoxesContainer = () =>{
         }
     }
 
+
+    function playerKingMovement(item){
+        console.log("item:",item);
+        const playerI = item.i;
+        const playerJ = item.j;
+      
+        const updateColorBox = checkersBoxes.map((item) => item.color.includes('bg-fuchsia-500') ? {...item,color:"bg-orange-700",active:null,stepActive:null,playerActive:null} : item);
+        const boxDeactive = updateColorBox.map((item) => item.color.includes('bg-white') ? {...item,color:"bg-orange-700",active:null,stepActive:null,playerActive:null} : item);
+        const playerActiveFilter = boxDeactive.filter((item)=> item.playerActive == true);
+
+        let playerKingBoxes = boxDeactive;
+
+        if(playerActiveFilter.length > 0){
+            const pI = playerActiveFilter[0].i;
+            const pJ = playerActiveFilter[0].j;
+            playerKingBoxes = boxDeactive.map((item)=> Number(item.i) == pI && Number(item.j) == pJ ? {...item,playerActive:null}:item);
+        }
+
+        const newUpdatePlayerActive = playerKingBoxes.map((item)=> Number(item.i) == playerI && Number(item.j) == playerJ ? {...item,playerActive:true}: item);
+
+        // right movement
+        let rightUpI = item.i;
+        let rightDownI = item.i;
+        let rightUpJ = item.j;
+        let rightDownJ = item.j;
+        
+        // left movement
+        let leftUpI = item.i;
+        let leftDownI = item.i;
+        let leftUpJ = item.j;
+        let leftDownJ = item.j;
+
+
+        //  if go upward left and right
+        rightUpI = rightUpI - 1;
+        rightUpJ = rightUpJ + 1;
+
+        leftUpI = leftUpI - 1;
+        leftUpJ = leftUpJ - 1;
+
+
+        //  if go downward left and right
+        leftDownI = leftDownI + 1;
+        leftDownJ = leftDownJ - 1;
+
+        rightDownI = rightDownI + 1;
+        rightDownJ = rightDownJ + 1;
+
+
+        const rightUpward = newUpdatePlayerActive.filter(x => rightUpI >= 0 )
+
+
+    }
+
     function playerNoDeactive(players){
 
         const blackActive = players.filter((item) => item.playerMoveActive == true && item.playerId == "black");
@@ -372,20 +428,11 @@ const BoxesContainer = () =>{
             setCheckersBoxes(nextBoxMove);
             resetBoard(nextBoxMove);
         }
-        else if(item.kingArea == "black"){
+        else if(item.kingArea != null){
             const nextBoxMove = prevBoxMove.map((item) => Number(item.i) == nextI && Number(item.j) == nextJ ? {...item,color:playerActiveColor,piece:playerPiece,active:nextActive,playerId:nextPlayerId,playerActive:null,stepActive:null,playerKing:true} : item);
             setCheckersBoxes(nextBoxMove);
             resetBoard(nextBoxMove);
-        }
-        else if(item.kingArea == "green"){
-            const nextBoxMove = prevBoxMove.map((item) => Number(item.i) == nextI && Number(item.j) == nextJ ? {...item,color:playerActiveColor,piece:playerPiece,active:nextActive,playerId:nextPlayerId,playerActive:null,stepActive:null,playerKing:true} : item);
-            setCheckersBoxes(nextBoxMove);
-            resetBoard(nextBoxMove);
-        }
-
-     
-        
-  
+        }  
     }
 
 
@@ -599,13 +646,27 @@ const BoxesContainer = () =>{
 
                     const emptyAttackerPos = boxes.map((item) => Number(item.i) == attackerposI && Number(item.j) == attackerposJ ? {...item,
                         active:null,color:"bg-orange-700",direction:null,piece:null,playerActive:null,playerMoveActive:null,position:null,stepActive:null
-                    } : item)
-                    const newCheckersPos = emptyAttackerPos.map((item) => Number(item.i) == newPosI && Number(item.j) == newPosJ ? {...item,color:attackerColor,direction:attackerDirection,
-                        piece:attacker,playerId:attackerPlayerId,playerActive:null,stepActive:null,active:true
                     } : item);
 
-        setCheckersBoxes(newCheckersPos);
-        resetBoard(newCheckersPos);
+
+                    const kingPos = emptyAttackerPos.filter((item) => Number(item.i) == newPosI && Number(item.j) == newPosJ && item.kingArea !== null ? true : false);
+
+                    if(kingPos[0].kingArea != null){
+                        const newCheckersPos = emptyAttackerPos.map((item) => Number(item.i) == newPosI && Number(item.j) == newPosJ ? {...item,color:attackerColor,direction:attackerDirection,
+                            piece:attacker,playerId:attackerPlayerId,playerActive:null,stepActive:null,active:true,playerKing:true
+                        } : item);
+    
+                        setCheckersBoxes(newCheckersPos);
+                        resetBoard(newCheckersPos);
+                    }else{
+                        const newCheckersPos = emptyAttackerPos.map((item) => Number(item.i) == newPosI && Number(item.j) == newPosJ ? {...item,color:attackerColor,direction:attackerDirection,
+                            piece:attacker,playerId:attackerPlayerId,playerActive:null,stepActive:null,active:true
+                        } : item);
+    
+                        setCheckersBoxes(newCheckersPos);
+                        resetBoard(newCheckersPos);
+                    }
+
             return;
         }else{
             enemyPieceboxes.push(enemypiece[0]);
@@ -638,13 +699,26 @@ const BoxesContainer = () =>{
 
                     const emptyAttackerPos = boxes.map((item) => Number(item.i) == attackerposI && Number(item.j) == attackerposJ ? {...item,
                         active:null,color:"bg-orange-700",direction:null,piece:null,playerActive:null,playerMoveActive:null,position:null,stepActive:null
-                    } : item)
-                    const newCheckersPos = emptyAttackerPos.map((item) => Number(item.i) == newPosI && Number(item.j) == newPosJ ? {...item,color:attackerColor,direction:attackerDirection,
-                        piece:attacker,playerId:attackerPlayerId,playerActive:null,stepActive:null,active:true
                     } : item);
 
-        setCheckersBoxes(newCheckersPos);
-        resetBoard(newCheckersPos);
+                    const kingPos = emptyAttackerPos.filter((item) => Number(item.i) == newPosI && Number(item.j) == newPosJ && item.kingArea !== null ? true : false);
+
+                    if(kingPos[0].kingArea != null){
+                        const newCheckersPos = emptyAttackerPos.map((item) => Number(item.i) == newPosI && Number(item.j) == newPosJ ? {...item,color:attackerColor,direction:attackerDirection,
+                            piece:attacker,playerId:attackerPlayerId,playerActive:null,stepActive:null,active:true,playerKing:true
+                        } : item);
+    
+                        setCheckersBoxes(newCheckersPos);
+                        resetBoard(newCheckersPos);
+                    }else{
+                        const newCheckersPos = emptyAttackerPos.map((item) => Number(item.i) == newPosI && Number(item.j) == newPosJ ? {...item,color:attackerColor,direction:attackerDirection,
+                            piece:attacker,playerId:attackerPlayerId,playerActive:null,stepActive:null,active:true
+                        } : item);
+    
+                        setCheckersBoxes(newCheckersPos);
+                        resetBoard(newCheckersPos);
+                    }
+
             return;
         }else{
             enemyPieceboxes.push(enemypiece[0]);
@@ -663,6 +737,8 @@ const BoxesContainer = () =>{
         rightI = rightI + 1;
         rightJ  = rightJ - 1;
 
+        console.log("remove right upward");
+
         const enemypiece = boxes.filter((item)=> Number(item.i) == rightI && Number(item.j) == rightJ);
        
         if(rightI == attackerI && rightJ == attackerJ){
@@ -677,13 +753,27 @@ const BoxesContainer = () =>{
 
                     const emptyAttackerPos = boxes.map((item) => Number(item.i) == attackerposI && Number(item.j) == attackerposJ ? {...item,
                         active:null,color:"bg-orange-700",direction:null,piece:null,playerActive:null,playerMoveActive:null,position:null,stepActive:null
-                    } : item)
-                    const newCheckersPos = emptyAttackerPos.map((item) => Number(item.i) == newPosI && Number(item.j) == newPosJ ? {...item,color:attackerColor,direction:attackerDirection,
-                        piece:attacker,playerId:attackerPlayerId,playerActive:null,stepActive:null,active:true
                     } : item);
 
-        setCheckersBoxes(newCheckersPos);
-        resetBoard(newCheckersPos);
+                    const kingPos = emptyAttackerPos.filter((item) => Number(item.i) == newPosI && Number(item.j) == newPosJ && item.kingArea !== null ? true : false);
+
+                    console.log(kingPos,"kinfpost");
+
+                    if(kingPos[0].kingArea != null){
+                        const newCheckersPos = emptyAttackerPos.map((item) => Number(item.i) == newPosI && Number(item.j) == newPosJ ? {...item,color:attackerColor,direction:attackerDirection,
+                            piece:attacker,playerId:attackerPlayerId,playerActive:null,stepActive:null,active:true,playerKing:true
+                        } : item);
+                        setCheckersBoxes(newCheckersPos);
+                        resetBoard(newCheckersPos);
+                   }else{
+                        const newCheckersPos = emptyAttackerPos.map((item) => Number(item.i) == newPosI && Number(item.j) == newPosJ ? {...item,color:attackerColor,direction:attackerDirection,
+                            piece:attacker,playerId:attackerPlayerId,playerActive:null,stepActive:null,active:true
+                        } : item);
+                        setCheckersBoxes(newCheckersPos);
+                        resetBoard(newCheckersPos);
+                   }
+
+
             return;
         }else{
             enemyPieceboxes.push(enemypiece[0]);
@@ -716,13 +806,27 @@ const BoxesContainer = () =>{
 
                     const emptyAttackerPos = boxes.map((item) => Number(item.i) == attackerposI && Number(item.j) == attackerposJ ? {...item,
                         active:null,color:"bg-orange-700",direction:null,piece:null,playerActive:null,playerMoveActive:null,position:null,stepActive:null
-                    } : item)
-                    const newCheckersPos = emptyAttackerPos.map((item) => Number(item.i) == newPosI && Number(item.j) == newPosJ ? {...item,color:attackerColor,direction:attackerDirection,
-                        piece:attacker,playerId:attackerPlayerId,playerActive:null,stepActive:null,active:true
                     } : item);
 
-        setCheckersBoxes(newCheckersPos);
-        resetBoard(newCheckersPos);
+                    const kingPos = emptyAttackerPos.filter((item) => Number(item.i) == newPosI && Number(item.j) == newPosJ && item.kingArea !== null ? true : false);
+
+                    if(kingPos[0].kingArea != null){
+                        const newCheckersPos = emptyAttackerPos.map((item) => Number(item.i) == newPosI && Number(item.j) == newPosJ ? {...item,color:attackerColor,direction:attackerDirection,
+                            piece:attacker,playerId:attackerPlayerId,playerActive:null,stepActive:null,active:true,playerKing:true
+                        } : item);
+    
+                        setCheckersBoxes(newCheckersPos);
+                        resetBoard(newCheckersPos);
+                    }else{
+                        const newCheckersPos = emptyAttackerPos.map((item) => Number(item.i) == newPosI && Number(item.j) == newPosJ ? {...item,color:attackerColor,direction:attackerDirection,
+                            piece:attacker,playerId:attackerPlayerId,playerActive:null,stepActive:null,active:true
+                        } : item);
+    
+                        setCheckersBoxes(newCheckersPos);
+                        resetBoard(newCheckersPos);
+                    }
+
+
             return;
         }else{
             enemyPieceboxes.push(enemypiece[0]);
