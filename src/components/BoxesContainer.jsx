@@ -146,7 +146,6 @@ const BoxesContainer = () =>{
 
 
     const onHandleClick = (item) =>{
-        console.log(checkersBoxes,"boxes");
         console.log(item,"item");
         if(item.active !== true){
             if(item.stepActive == true){
@@ -168,7 +167,7 @@ const BoxesContainer = () =>{
         }
         else if(item.playerMoveActive == true && item.playerId == "green" && item.playerKing == null){
             playerTwoMovement(item);
-        }else if(item.playerMoveActive == true && item.playerId != null && item.playerKing != null){
+        }else if(item.playerMoveActive == true && item.playerId != null && item.playerKing == true){
             playerKingMovement(item);
         }
    
@@ -245,7 +244,6 @@ const BoxesContainer = () =>{
             checkForEnemy(item,newUpdatePlayerActive);
         }
         else if(rightUpward.length > 0  && rightUpward[0].piece != null){
-            console.log("entry mode enemy both side");
             setCheckersBoxes(newUpdatePlayerActive);
             checkForEnemy(item,newUpdatePlayerActive);
         }
@@ -270,7 +268,6 @@ const BoxesContainer = () =>{
         const newUpdatePlayerActive = deactivePlayers.map((item)=> Number(item.i) == playerI && Number(item.j) == playerJ ? {...item,playerActive:true}: item);
 
 
-        console.log("movement",item);
 
         let rightI = item.i;
         let rightJ = item.j;
@@ -288,6 +285,8 @@ const BoxesContainer = () =>{
 
         const rightDownward = newUpdatePlayerActive.filter((item)=> rightI < 8 && rightJ < 8 ? Number(item.i) == rightI && Number(item.j) == rightJ : null );
         const leftDownward = newUpdatePlayerActive.filter((item) => leftI < 8 && leftJ >= 0 ? Number(item.i) == leftI && Number(item.j) == leftJ : null);
+
+        console.log(leftDownward,"left downward");
 
 
         if(rightDownward.length > 0 && leftDownward.length > 0 && rightDownward[0].piece == null && leftDownward[0].piece == null){
@@ -331,7 +330,6 @@ const BoxesContainer = () =>{
 
 
     function playerKingMovement(item){
-        console.log("item:",item);
         const playerI = item.i;
         const playerJ = item.j;
       
@@ -377,8 +375,33 @@ const BoxesContainer = () =>{
         rightDownI = rightDownI + 1;
         rightDownJ = rightDownJ + 1;
 
+        console.log(item,"king item");
+        console.log(leftDownI,leftDownJ,"left down");
 
-        const rightUpward = newUpdatePlayerActive.filter(x => rightUpI >= 0 )
+        const rightUpward = newUpdatePlayerActive.some(x => rightUpI >= 0 && rightUpJ <= 7 && Number(x.i) == rightUpI && Number(x.j) == rightUpJ && x.piece == null);
+        const leftUpward = newUpdatePlayerActive.some(x => leftUpI >= 0 && leftUpJ <= 7 && Number(x.i) == leftUpI && Number(x.j) == leftUpJ && x.piece == null);
+        const leftDownward = newUpdatePlayerActive.some(x => leftDownI <=7 && leftDownJ >=0 && Number(x.i) == leftDownI && Number(x.j) == leftDownJ && x.piece == null);
+        const rightDownward = newUpdatePlayerActive.some(x => rightDownI <=7 && rightDownJ <=7 && Number(x.i) == rightDownI && Number(x.j) == rightDownJ && x.piece == null);
+        
+        if(leftDownward == true && rightDownward == true && rightUpward == true && leftUpward == true){
+            // const downwardBoxes = newUpdatePlayerActive.filter((item)=> Number(item.i) == leftDownI && Number(item.j) == )
+            // const upwardBoxes = newUpdatePlayerActive.filter((item)=> Number(item.i) == );
+        }else if(rightUpward == true && leftUpward == true){
+
+        }else if(rightDownward == true && leftDownward == true){
+
+        }else if(rightDownward == true){
+
+        }else if(leftDownward == true){
+            console.log("left downward",leftDownward);
+            const leftDownwardarray = newUpdatePlayerActive.map((item) => Number(item.i) == leftDownI && Number(item.j) == leftDownJ ? {...item,color:"bg-fuchsia-500",active:null,stepActive:true}:item);
+            setCheckersBoxes(leftDownwardarray);
+            console.log(leftDownwardarray,"left downward array");
+        }else if(rightUpward == true){
+
+        }else if(leftUpward == true){
+            console.log("left upward",leftUpward);
+        }
 
 
     }
@@ -423,7 +446,6 @@ const BoxesContainer = () =>{
         const nextPlayerId = playeractive[0].playerId;
         
         if(item.kingArea == null){
-            console.log("move new")
             const nextBoxMove = prevBoxMove.map((item) => Number(item.i) == nextI && Number(item.j) == nextJ ? {...item,color:playerActiveColor,piece:playerPiece,active:nextActive,playerId:nextPlayerId,playerActive:null,stepActive:null} : item);
             setCheckersBoxes(nextBoxMove);
             resetBoard(nextBoxMove);
@@ -446,7 +468,6 @@ const BoxesContainer = () =>{
 
     function checkForEnemy(item,boxes){
 
-        console.log(item,"check enemy");
         if(item.playerId == "black"){
             checkForRightUpward(item,item.i,item.j,boxes);
             return;
@@ -463,7 +484,7 @@ const BoxesContainer = () =>{
         rightI = rightI - 1;
         rightJ = rightJ + 1;
 
-        const enemyPlayer = boxes.filter((item) => rightI >=0 && rightJ < 8 && Number(item.i) == rightI && Number(item.j) == rightJ && item.piece != null);
+        const enemyPlayer = boxes.filter((item) => rightI >=0 && rightJ < 8 && Number(item.i) == rightI && Number(item.j) == rightJ && item.piece != null && item.playerId != "black");
 
         if(enemyPlayer.length > 0 && enemyPlayer[0].playerId != "black"){
             checkForRightUpward(item,rightI,rightJ,boxes);
@@ -475,7 +496,6 @@ const BoxesContainer = () =>{
             }
             else if(i == item.i && j == item.j)
             {
-                console.log("go for left check");
                 checkForLeftUpward(item,item.i,item.j,boxes);
                 return;
             }
@@ -498,7 +518,6 @@ const BoxesContainer = () =>{
         
         const enemyLeftPlayer = boxes.filter((item) => leftI >=0 && leftJ >=0 && Number(item.i) == leftI && Number(item.j) == leftJ && item.piece != null);
 
-        console.log(enemyLeftPlayer);
 
         if(enemyLeftPlayer.length > 0 && enemyLeftPlayer[0].playerId != "black"){
             checkForLeftUpward(item,leftI,leftJ,boxes);
@@ -529,19 +548,22 @@ const BoxesContainer = () =>{
         rightI = rightI + 1;
         rightJ = rightJ + 1;
 
-        const enemyDownRight = boxes.filter((item) => rightI <= 7 && rightJ <= 7 && Number(item.i) == rightI && Number(item.j) == rightJ && item.piece != null);
+        const enemyDownRight = boxes.filter((item) => rightI <= 7 && rightJ <= 7 && Number(item.i) == rightI && Number(item.j) == rightJ && item.piece != null && item.playerId != "green");
         if(enemyDownRight.length > 0 && enemyDownRight[0].playerId != "green"){
             checkForRightDownward(item,rightI,rightJ,boxes);
             return;
         }else if(enemyDownRight.length == 0){
             if(rightI > 7 && rightJ > 7){
+                console.log("enter 1");
                 checkForLeftDownward(item,item.i,item.j,boxes);
                 return ;
             }
             else if(i == item.i && j == item.j){
+                console.log("enter 2");
                 checkForLeftDownward(item,item.i,item.j,boxes);
                 return;
             }else{
+                console.log("enter 3");
                 const attackDownward = attackActiveEnemy(item,rightI,rightJ,boxes,"rd");
                 checkForLeftDownward(item,item.i,item.j,attackDownward);
                 return;
@@ -593,8 +615,7 @@ const BoxesContainer = () =>{
 
         let newPosI = item.i;
         let newPosJ = item.j;
-        console.log(item);
-        console.log(attackerDirection,"a");
+
 
         removeEnemyPiece(item,attackerposI,attackerposJ,newPosI,newPosJ,attackerDirection);
 
@@ -651,7 +672,9 @@ const BoxesContainer = () =>{
 
                     const kingPos = emptyAttackerPos.filter((item) => Number(item.i) == newPosI && Number(item.j) == newPosJ && item.kingArea !== null ? true : false);
 
-                    if(kingPos[0].kingArea != null){
+                    console.log(kingPos,"kingpos");
+
+                    if(kingPos[0]?.kingArea != null){
                         const newCheckersPos = emptyAttackerPos.map((item) => Number(item.i) == newPosI && Number(item.j) == newPosJ ? {...item,color:attackerColor,direction:attackerDirection,
                             piece:attacker,playerId:attackerPlayerId,playerActive:null,stepActive:null,active:true,playerKing:true
                         } : item);
@@ -673,7 +696,6 @@ const BoxesContainer = () =>{
             const newBoxes = boxes.map((item) => Number(item.i) == rightI && Number(item.j) == rightJ ? {...item,active:null,
                 color:"bg-orange-700", direction:null,piece:null,playerActive:null,playerId:null,playerMoveActive:null,stepActive:null
             }: item);
-            console.log(newBoxes,"new boxes");
             removeRightDownwardPiece(item,rightI,rightJ,attackerI,attackerJ,newBoxes);
             return;
         }
@@ -703,7 +725,7 @@ const BoxesContainer = () =>{
 
                     const kingPos = emptyAttackerPos.filter((item) => Number(item.i) == newPosI && Number(item.j) == newPosJ && item.kingArea !== null ? true : false);
 
-                    if(kingPos[0].kingArea != null){
+                    if(kingPos[0]?.kingArea != null){
                         const newCheckersPos = emptyAttackerPos.map((item) => Number(item.i) == newPosI && Number(item.j) == newPosJ ? {...item,color:attackerColor,direction:attackerDirection,
                             piece:attacker,playerId:attackerPlayerId,playerActive:null,stepActive:null,active:true,playerKing:true
                         } : item);
@@ -725,7 +747,6 @@ const BoxesContainer = () =>{
             const newBoxes = boxes.map((item) => Number(item.i) == rightI && Number(item.j) == rightJ ? {...item,active:null,
                 color:"bg-orange-700", direction:null,piece:null,playerActive:null,playerId:null,playerMoveActive:null,stepActive:null
             }: item);
-            console.log(newBoxes,"new boxes");
             removeLeftDownwardPiece(item,rightI,rightJ,attackerI,attackerJ,newBoxes);
             return;
         }
@@ -737,7 +758,6 @@ const BoxesContainer = () =>{
         rightI = rightI + 1;
         rightJ  = rightJ - 1;
 
-        console.log("remove right upward");
 
         const enemypiece = boxes.filter((item)=> Number(item.i) == rightI && Number(item.j) == rightJ);
        
@@ -757,9 +777,8 @@ const BoxesContainer = () =>{
 
                     const kingPos = emptyAttackerPos.filter((item) => Number(item.i) == newPosI && Number(item.j) == newPosJ && item.kingArea !== null ? true : false);
 
-                    console.log(kingPos,"kinfpost");
 
-                    if(kingPos[0].kingArea != null){
+                    if(kingPos[0]?.kingArea != null){
                         const newCheckersPos = emptyAttackerPos.map((item) => Number(item.i) == newPosI && Number(item.j) == newPosJ ? {...item,color:attackerColor,direction:attackerDirection,
                             piece:attacker,playerId:attackerPlayerId,playerActive:null,stepActive:null,active:true,playerKing:true
                         } : item);
@@ -780,7 +799,6 @@ const BoxesContainer = () =>{
             const newBoxes = boxes.map((item) => Number(item.i) == rightI && Number(item.j) == rightJ ? {...item,active:null,
                 color:"bg-orange-700", direction:null,piece:null,playerActive:null,playerId:null,playerMoveActive:null,stepActive:null
             }: item);
-            console.log(newBoxes,"new boxes");
             removeRightUpwardPiece(item,rightI,rightJ,attackerI,attackerJ,newBoxes);
             return;
         }
@@ -810,7 +828,7 @@ const BoxesContainer = () =>{
 
                     const kingPos = emptyAttackerPos.filter((item) => Number(item.i) == newPosI && Number(item.j) == newPosJ && item.kingArea !== null ? true : false);
 
-                    if(kingPos[0].kingArea != null){
+                    if(kingPos[0]?.kingArea != null){
                         const newCheckersPos = emptyAttackerPos.map((item) => Number(item.i) == newPosI && Number(item.j) == newPosJ ? {...item,color:attackerColor,direction:attackerDirection,
                             piece:attacker,playerId:attackerPlayerId,playerActive:null,stepActive:null,active:true,playerKing:true
                         } : item);
@@ -833,7 +851,6 @@ const BoxesContainer = () =>{
             const newBoxes = boxes.map((item) => Number(item.i) == rightI && Number(item.j) == rightJ ? {...item,active:null,
                 color:"bg-orange-700", direction:null,piece:null,playerActive:null,playerId:null,playerMoveActive:null,stepActive:null
             }: item);
-            console.log(newBoxes,"new boxes");
             removeLeftUpwardPiece(item,rightI,rightJ,attackerI,attackerJ,newBoxes);
             return;
         }
